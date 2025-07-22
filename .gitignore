@@ -1,6 +1,18 @@
-*.i
-*.ii
-*.gpu
-*.ptx
-*.cubin
-*.fatbin
+# vscode 
+.vscode
+
+# build output
+build/
+
+#documentation
+docs/
+
+# .csv and .dat files
+*.csv
+*.dat
+*.pptx
+*.mp4
+
+# specific files to ignore
+FpiPreprocessing.cpp
+test1__Track_4_Image_1.png
