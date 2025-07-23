@@ -1,12 +1,14 @@
-#include <opencv2/cudaimgproc.hpp>
-#include <opencv2/cudaarithm.hpp>
-#include <opencv2/cudafilters.hpp>
 #include <cuda_runtime.h>
 #include <npp.h>
+
 #include <iostream>
+#include <opencv2/cudaarithm.hpp>
+#include <opencv2/cudafilters.hpp>
+#include <opencv2/cudaimgproc.hpp>
+
 #undef LOGURU_WITH_STREAMS
-#include "loguru.hpp"
 #include "laplacian_methods.hpp"
+#include "loguru.hpp"
 #include "utils.hpp"
 
 cv::Mat OpencvCpuLaplacian(const cv::Mat& input_image, int kernel_size, double contrast_factor) {
@@ -35,12 +37,12 @@ cv::Mat OpencvGpuLaplacian(const cv::Mat& input_cpu_img, int kernel_size, double
     stopwatch.Restart();
 
     // Crea filtro Laplaciano
-    auto laplacian_filter = cv::cuda::createLaplacianFilter(
-        d_input.type(),        // tipo input
-        d_output.type(),       // tipo output
-        kernel_size,           // dimensione kernel
-        scale                  // fattore di scala (contrast factor)
-    );
+    auto laplacian_filter =
+        cv::cuda::createLaplacianFilter(d_input.type(),   // tipo input
+                                        d_output.type(),  // tipo output
+                                        kernel_size,      // dimensione kernel
+                                        scale             // fattore di scala (contrast factor)
+        );
 
     LOG_F(INFO, "Laplacian opencv GPU Filter Creation Time: %.2f ms", stopwatch.Elapsed_ms());
     stopwatch.Restart();
@@ -69,12 +71,8 @@ void checkNppStatus(NppStatus status, const char* msg) {
     }
 }
 
-void ApplyLaplacianWithGaussian(
-    const Npp8u* d_input,
-    Npp8u* d_output,
-    int width,
-    int height,
-    int step // normalmente uguale a width, se non ci sono padding
+void ApplyLaplacianWithGaussian(const Npp8u* d_input, Npp8u* d_output, int width, int height,
+                                int step  // normalmente uguale a width, se non ci sono padding
 ) {
     Stopwatch stopwatch;
     NppiSize roi = {width, height};
@@ -84,28 +82,14 @@ void ApplyLaplacianWithGaussian(
     cudaMalloc(&d_smooth, step * height);
 
     // Step 1: Gaussian smoothing
-    checkNppStatus(
-        nppiFilterGauss_8u_C1R(
-            d_input, step,
-            d_smooth, step,
-            roi,
-            NPP_MASK_SIZE_3_X_3
-        ),
-        "Gaussian Filter"
-    );
+    checkNppStatus(nppiFilterGauss_8u_C1R(d_input, step, d_smooth, step, roi, NPP_MASK_SIZE_3_X_3),
+                   "Gaussian Filter");
     LOG_F(INFO, "Gaussian smoothing Time: %.2f ms", stopwatch.Elapsed_ms());
 
     // Step 2: Laplacian filtering
     checkNppStatus(
-        nppiFilterLaplace_8u_C1R(
-            d_smooth, step,
-            d_output, step,
-            roi,
-            NPP_MASK_SIZE_3_X_3
-        ),
-        "Laplacian Filter"
-    );
-
+        nppiFilterLaplace_8u_C1R(d_smooth, step, d_output, step, roi, NPP_MASK_SIZE_3_X_3),
+        "Laplacian Filter");
 
     // Cleanup
     cudaFree(d_smooth);
@@ -128,7 +112,7 @@ cv::Mat OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img, int kernel_si
 
     // Convert input to pinned memory (page-locked)
     cv::cuda::HostMem pinned_input(input_cpu_img, cv::cuda::HostMem::PAGE_LOCKED);
-    
+
     // Upload to GPU from pinned memory (faster than normal memory)
     cv::cuda::GpuMat d_input(pinned_input);
 
@@ -143,9 +127,8 @@ cv::Mat OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img, int kernel_si
 
     // Use d_input.type() for input and output type
     cv::cuda::GpuMat d_output;
-    auto laplacian_filter = cv::cuda::createLaplacianFilter(
-        d_input.type(), d_input.type(), kernel_size, scale
-    );
+    auto laplacian_filter =
+        cv::cuda::createLaplacianFilter(d_input.type(), d_input.type(), kernel_size, scale);
 
     filter_create_timer.stop();
     LOG_F(INFO, "Filter creation time: %.2f ms", filter_create_timer.getTimeMilli());
@@ -178,4 +161,3 @@ cv::Mat OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img, int kernel_si
 
     return result;
 }
-

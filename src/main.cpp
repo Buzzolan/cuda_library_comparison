@@ -1,13 +1,14 @@
-#include <iostream>
-#include <string>
-#include <opencv2/opencv.hpp>
 #include <cuda_runtime.h>
 #include <npp.h>
-#undef LOGURU_WITH_STREAMS
-#include "loguru.hpp"
-#include "laplacian_methods.hpp"
-#include "utils.hpp"
 
+#include <iostream>
+#include <opencv2/opencv.hpp>
+#include <string>
+
+#undef LOGURU_WITH_STREAMS
+#include "laplacian_methods.hpp"
+#include "loguru.hpp"
+#include "utils.hpp"
 
 int main(int argc, char** argv) {
     if (argc < 3) {
@@ -33,7 +34,7 @@ int main(int argc, char** argv) {
 
     // print GPU information
     cudaDeviceProp deviceProp;
-    cudaError_t  err = cudaGetDeviceProperties(&deviceProp, 0);
+    cudaError_t err = cudaGetDeviceProperties(&deviceProp, 0);
     if (err != cudaSuccess) {
         std::cerr << "Failed to get device properties: " << cudaGetErrorString(err) << std::endl;
         return -1;
@@ -44,9 +45,10 @@ int main(int argc, char** argv) {
     LOG_F(INFO, "Shared memory per block: %zu bytes", deviceProp.sharedMemPerBlock);
     LOG_F(INFO, "Max threads per block: %d", deviceProp.maxThreadsPerBlock);
 
-     try {
+    try {
         result_gpu_opencv = OpencvGpuLaplacian(image, kernel_size, contrast_factor);
-        result_gpu_opencv_pinned = OpencvGpuLaplacian_PinnedMem(image, kernel_size, contrast_factor);
+        result_gpu_opencv_pinned =
+            OpencvGpuLaplacian_PinnedMem(image, kernel_size, contrast_factor);
         cv::imwrite("output_laplacian_opencv_gpu.png", result_gpu_opencv);
     } catch (const std::exception& ex) {
         std::cerr << "Errore: " << ex.what() << "\n";
@@ -65,7 +67,7 @@ int main(int argc, char** argv) {
 
     int width = image.cols;
     int height = image.rows;
-    int step = static_cast<int>(image.step); // step in bytes
+    int step = static_cast<int>(image.step);  // step in bytes
     NppiSize roi = {width, height};
 
     cv::Mat img_out(height, width, CV_8UC1);

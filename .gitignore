@@ -1,6 +1,9 @@
 # vscode 
 .vscode
 
+#clangd
+.cache/
+
 # build output
 build/
 

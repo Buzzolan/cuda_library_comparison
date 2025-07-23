@@ -1,16 +1,15 @@
 #pragma once
 #include <chrono>
+#include <opencv2/core.hpp>
 
 double computeSSIM(const cv::Mat& img1, const cv::Mat& img2);
 double getMSE(const cv::Mat& img1, const cv::Mat& img2);
 
 class Stopwatch {
-public:
+   public:
     Stopwatch() { Restart(); }
 
-    void Restart() {
-        start_time_ = std::chrono::high_resolution_clock::now();
-    }
+    void Restart() { start_time_ = std::chrono::high_resolution_clock::now(); }
 
     double Elapsed_ms() const {
         auto now = std::chrono::high_resolution_clock::now();
@@ -18,6 +17,6 @@ public:
         return elapsed.count();
     }
 
-private:
+   private:
     std::chrono::high_resolution_clock::time_point start_time_;
 };
