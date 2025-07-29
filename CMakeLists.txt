@@ -3,8 +3,9 @@ project(cuda_library_comparision LANGUAGES CXX CUDA)
 
 set(CMAKE_CUDA_STANDARD 17)  # Imposta C++17 anche per CUDA
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 
-enable_language(CUDA)
+#enable_language(CUDA)
 # Set the CUDA architecture 4070 Ada Lovelace
 set(CMAKE_CUDA_ARCHITECTURES 90 80 75)  # Ada Lovelace, Ampere, Turing
 
@@ -37,9 +38,9 @@ if(CUDAToolkit_FOUND)
     message(STATUS "CUDAToolkit_VERSION: ${CUDAToolkit_VERSION}")
     message(STATUS "CUDA_PATH: $ENV{CUDA_PATH}")
     message(STATUS "CUDAToolkit_INCLUDE_DIRS: ${CUDAToolkit_INCLUDE_DIRS}")
-    set(CUDA_LIB_PATH "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/lib/x64")
-    link_directories(${CUDA_LIB_PATH})
-    message(STATUS "CUDA_LIB_PATH: ${CUDA_LIB_PATH}")
+    # set(CUDA_LIB_PATH "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/lib/x64")
+    # link_directories(${CUDA_LIB_PATH})
+    # message(STATUS "CUDA_LIB_PATH: ${CUDA_LIB_PATH}")
 else()
     message(STATUS "CUDAToolkit not found")
 endif()
@@ -47,7 +48,7 @@ endif()
 find_package(OpenCV REQUIRED)
 message(STATUS "OpenCV version: ${OpenCV_VERSION}")
 message(STATUS "OpenCV_DIR: ${OpenCV_DIR}")
-message(STATUS "OpenCV_LIBS: ${OpenCV_LIBS}")
+#message(STATUS "OpenCV_LIBS: ${OpenCV_LIBS}")
 
 target_include_directories(cuda_library_comparision PRIVATE ${OpenCV_INCLUDE_DIRS})
 # Recursively find all subdirectories in Common and add them to the include path
@@ -60,7 +61,7 @@ endforeach()
 list(REMOVE_DUPLICATES COMMON_INCLUDE_DIRS)
 target_include_directories(cuda_library_comparision PRIVATE ${COMMON_INCLUDE_DIRS})
 get_target_property(NPPIAL_LIB CUDA::nppial IMPORTED_LOCATION)
-message(STATUS "CUDA::nppial location: ${NPPIAL_LIB}")
+# message(STATUS "CUDA::nppial location: ${NPPIAL_LIB}")
 target_link_libraries(cuda_library_comparision PRIVATE 
     CUDA::cudart 
     CUDA::nppc 
@@ -90,4 +91,10 @@ add_custom_command(TARGET cuda_library_comparision POST_BUILD
     COMMENT "Copying OpenCV DLLs to executable directory"
 )
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+# Copy compile_commands.json to the source directory (project root)
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_BINARY_DIR}/compile_commands.json
+        ${CMAKE_SOURCE_DIR}/compile_commands.json)
+endif()
+

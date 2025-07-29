@@ -15,6 +15,10 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: " << argv[0] << " <image_path> <kernel_size> <contrast_factor>\n";
         return 1;
     }
+    // set loguru for debugging
+    loguru::init(argc, argv);
+
+    loguru::add_file("log.txt", loguru::Append, loguru::Verbosity_INFO);
     cv::Mat result_cpu_opencv;
     cv::Mat result_gpu_opencv;
     cv::Mat result_gpu_opencv_pinned;

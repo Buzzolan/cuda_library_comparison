@@ -16,6 +16,8 @@ docs/
 *.pptx
 *.mp4
 
+# for .cland-tidy
+compile_commands.json
+
 # specific files to ignore
-FpiPreprocessing.cpp
-test1__Track_4_Image_1.png
+
