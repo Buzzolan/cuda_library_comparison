@@ -1,0 +1,34 @@
+
+
+
+
+
+
+File verbosity level: 0
+date       time         ( uptime  ) [ thread name/id ]                   file:line     v| 
+2025-08-23 10:30:50.479 (   0.001s) [main thread     ]             loguru.cpp:841   INFO| Logging to 'log.txt', mode: 'a', verbosity: 0
+2025-08-23 10:30:50.568 (   0.090s) [main thread     ]               main.cpp:34    INFO| Image size: 3264 x 2448
+2025-08-23 10:30:50.574 (   0.096s) [main thread     ]  laplacian_methods.cpp:19    INFO| Laplacian opencv CPU Time: 5.98 ms
+2025-08-23 10:30:50.680 (   0.201s) [main thread     ]               main.cpp:47    INFO| GPU name: NVIDIA GeForce RTX 4070 Ti SUPER
+2025-08-23 10:30:50.680 (   0.202s) [main thread     ]               main.cpp:48    INFO| Total global memory: 17170956288 bytes
+2025-08-23 10:30:50.681 (   0.202s) [main thread     ]               main.cpp:49    INFO| Shared memory per block: 49152 bytes
+2025-08-23 10:30:50.681 (   0.202s) [main thread     ]               main.cpp:50    INFO| Max threads per block: 1024
+2025-08-23 10:30:50.776 (   0.298s) [main thread     ]  laplacian_methods.cpp:36    INFO| Laplacian opencv GPU Upload Time: 95.27 ms
+2025-08-23 10:30:50.777 (   0.299s) [main thread     ]  laplacian_methods.cpp:47    INFO| Laplacian opencv GPU Filter Creation Time: 1.00 ms
+2025-08-23 10:30:50.781 (   0.302s) [main thread     ]  laplacian_methods.cpp:53    INFO| Laplacian opencv GPU Time: 3.51 ms
+2025-08-23 10:30:50.782 (   0.303s) [main thread     ]  laplacian_methods.cpp:60    INFO| Laplacian opencv GPU Download Time: 0.97 ms
+2025-08-23 10:30:50.782 (   0.303s) [main thread     ]  laplacian_methods.cpp:62    INFO| Total Laplacian opencv GPU Time: 101.11 ms
+2025-08-23 10:30:50.784 (   0.306s) [main thread     ]  laplacian_methods.cpp:120   INFO| Upload using pinned memory: 1.79 ms
+2025-08-23 10:30:50.785 (   0.306s) [main thread     ]  laplacian_methods.cpp:134   INFO| Filter creation time: 0.10 ms
+2025-08-23 10:30:50.785 (   0.307s) [main thread     ]  laplacian_methods.cpp:145   INFO| Laplacian filtering time: 0.66 ms
+2025-08-23 10:30:50.786 (   0.308s) [main thread     ]  laplacian_methods.cpp:157   INFO| Download time: 0.95 ms
+2025-08-23 10:30:50.786 (   0.308s) [main thread     ]  laplacian_methods.cpp:160   INFO| Total GPU Laplacian time: 3.75 ms
+2025-08-23 10:30:50.972 (   0.493s) [main thread     ]               main.cpp:65    INFO| MSE == 0 means no difference between images.
+2025-08-23 10:30:50.972 (   0.494s) [main thread     ]               main.cpp:66    INFO| SSIM == 1 means images are identical.
+2025-08-23 10:30:50.972 (   0.494s) [main thread     ]               main.cpp:67    INFO| MSE: 0.0000
+2025-08-23 10:30:50.972 (   0.494s) [main thread     ]               main.cpp:68    INFO| SSIM: 1.0000
+2025-08-23 10:30:50.993 (   0.514s) [main thread     ]  laplacian_methods.cpp:87    INFO| Gaussian smoothing Time: 18.68 ms
+2025-08-23 10:30:50.997 (   0.518s) [main thread     ]  laplacian_methods.cpp:96    INFO| Laplacian with Gaussian Time: 23.07 ms
+2025-08-23 10:30:51.182 (   0.703s) [main thread     ]               main.cpp:105   INFO| NPP MSE cpu_opencv vs NPP: 1125.7288
+2025-08-23 10:30:51.182 (   0.703s) [main thread     ]               main.cpp:106   INFO| NPP SSIM cpu_opencv vs NPP: 0.1599
+2025-08-23 10:30:51.183 (   0.704s) [main thread     ]             loguru.cpp:538   INFO| atexit
