@@ -5,3 +5,9 @@ cmake_minimum_required(VERSION 3.15)
 # ============================
 add_library(loguru STATIC  ${CMAKE_CURRENT_LIST_DIR}/loguru/loguru.cpp)
 target_include_directories(loguru PUBLIC ${CMAKE_CURRENT_LIST_DIR}/loguru)
+
+# ============================
+# nlohmann_json setup
+# ============================
+add_library(nlohmann INTERFACE)
+target_include_directories(nlohmann INTERFACE ${CMAKE_CURRENT_LIST_DIR}/nlohmann)
