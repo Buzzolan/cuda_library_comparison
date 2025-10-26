@@ -6,25 +6,25 @@
 #include <string>
 
 #undef LOGURU_WITH_STREAMS
+#include "ReadSettings.hpp"
 #include "laplacian_methods.hpp"
 #include "loguru.hpp"
 #include "utils.hpp"
 
-int main(int argc, char** argv) {
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " <image_path> <kernel_size> <contrast_factor>\n";
-        return 1;
-    }
+int main(int argc, char* argv[]) {
+    ReadSettings settings("Settings.json");
+    std::string image_path =
+        settings.GetValue<std::string>("Settings.image_path", "data/grey-sloth.png");
+    int kernel_size = settings.GetValue<int>("Settings.kernel_size", 3);
+    double contrast_factor = settings.GetValue<double>("Settings.constrast_factor", 1.0);
+
     // set loguru for debugging
     loguru::init(argc, argv);
-
     loguru::add_file("log.txt", loguru::Append, loguru::Verbosity_INFO);
+
     cv::Mat result_cpu_opencv;
     cv::Mat result_gpu_opencv;
     cv::Mat result_gpu_opencv_pinned;
-    std::string image_path = argv[1];
-    int kernel_size = std::stoi(argv[2]);
-    double contrast_factor = std::stod(argv[3]);
 
     cv::Mat image = cv::imread(image_path, cv::IMREAD_GRAYSCALE);
     if (image.empty()) {

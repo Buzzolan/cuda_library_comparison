@@ -1,0 +1,7 @@
+{
+    "Settings": {
+        "image_path": "C:/Users/User/Documents/cuda_library_comparison/data/grey-sloth.png",
+        "kernel_size": 3,
+        "constrast_factor": 1.0
+    }
+}

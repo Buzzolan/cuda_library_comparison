@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.18)
 project(cuda_library_comparision LANGUAGES CXX CUDA)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(CMAKE_CUDA_STANDARD 17)  # Imposta C++17 anche per CUDA
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
@@ -65,6 +68,7 @@ set(CUDA_NPP_LIBS
 target_link_libraries(${PROJECT_NAME} PRIVATE CUDA::cudart  ${CUDA_NPP_LIBS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS})
 target_link_libraries(${PROJECT_NAME} PRIVATE loguru)
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann)
 
 # ============================
 # Additional settings
@@ -92,4 +96,11 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
         ${CMAKE_BINARY_DIR}/compile_commands.json
         ${CMAKE_SOURCE_DIR}/compile_commands.json)
 endif()
+
+# Copy Settings.json to the build directory
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/Settings.json" $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    COMMENT "Copying Settings.json to executable directory"
+)
 
