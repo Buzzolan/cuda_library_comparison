@@ -3,67 +3,55 @@ project(cuda_library_comparision LANGUAGES CXX CUDA)
 
 set(CMAKE_CUDA_STANDARD 17)  # Imposta C++17 anche per CUDA
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-#set(CMAKE_VERBOSE_MAKEFILE ON)
 
 #enable_language(CUDA)
-# Set the CUDA architecture 4070 Ada Lovelace
-set(CMAKE_CUDA_ARCHITECTURES 90 80 75)  # Ada Lovelace, Ampere, Turing
+set(CMAKE_CUDA_ARCHITECTURES 90 80 75)  # 4070 Ada Lovelace, Ampere, Turing
 
-message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
-
+# ============================
+# Include directories
+# ============================
 include_directories(
     ${CMAKE_SOURCE_DIR}/inc
 )
 
-# ============================
-# LOGURU setup
-# ============================
-# separate the loguru library from the main project
-# to avoid linking issues with nvcc
-add_library(loguru STATIC
-    ${CMAKE_SOURCE_DIR}/third_party/loguru/loguru.cpp
-)
-
-target_include_directories(loguru PUBLIC
-    ${CMAKE_SOURCE_DIR}/third_party/loguru
-)
-
-add_executable(cuda_library_comparision 
+add_executable(${PROJECT_NAME} 
     src/main.cpp
     src/laplacian_methods.cpp
     src/utils.cpp)
 
+# ============================
+# Find CUDA Toolkit
+# ============================
 find_package(CUDAToolkit)
 if(CUDAToolkit_FOUND)
     message(STATUS "CUDAToolkit_VERSION: ${CUDAToolkit_VERSION}")
     message(STATUS "CUDA_PATH: $ENV{CUDA_PATH}")
     message(STATUS "CUDAToolkit_INCLUDE_DIRS: ${CUDAToolkit_INCLUDE_DIRS}")
-    # set(CUDA_LIB_PATH "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/lib/x64")
-    # link_directories(${CUDA_LIB_PATH})
-    # message(STATUS "CUDA_LIB_PATH: ${CUDA_LIB_PATH}")
 else()
     message(STATUS "CUDAToolkit not found")
 endif()
 
+# ============================
+# Find includes OpenCV
+# ============================
 find_package(OpenCV REQUIRED)
-message(STATUS "OpenCV version: ${OpenCV_VERSION}")
-message(STATUS "OpenCV_DIR: ${OpenCV_DIR}")
-#message(STATUS "OpenCV_LIBS: ${OpenCV_LIBS}")
+if(OpenCV_FOUND)
+    message(STATUS "OpenCV found: ${OpenCV_VERSION}")
+    message(STATUS "OpenCV version: ${OpenCV_VERSION}")
+    message(STATUS "OpenCV_DIR: ${OpenCV_DIR}")
+else()
+    message(FATAL_ERROR "OpenCV not found")
+endif()
 
-target_include_directories(cuda_library_comparision PRIVATE ${OpenCV_INCLUDE_DIRS})
-# Recursively find all subdirectories in Common and add them to the include path
-file(GLOB_RECURSE COMMON_HEADERS ${CMAKE_SOURCE_DIR}/Common/*.h*)
-set(COMMON_INCLUDE_DIRS "")
-foreach(header ${COMMON_HEADERS})
-    get_filename_component(dir ${header} DIRECTORY)
-    list(APPEND COMMON_INCLUDE_DIRS ${dir})
-endforeach()
-list(REMOVE_DUPLICATES COMMON_INCLUDE_DIRS)
-target_include_directories(cuda_library_comparision PRIVATE ${COMMON_INCLUDE_DIRS})
-get_target_property(NPPIAL_LIB CUDA::nppial IMPORTED_LOCATION)
-# message(STATUS "CUDA::nppial location: ${NPPIAL_LIB}")
-target_link_libraries(cuda_library_comparision PRIVATE 
-    CUDA::cudart 
+# ==============================
+# Add third-party libraries
+# ==============================
+add_subdirectory(third_party)
+
+# ============================
+# Link libraries
+# ============================
+set(CUDA_NPP_LIBS
     CUDA::nppc 
     CUDA::nppial 
     CUDA::nppif 
@@ -73,25 +61,32 @@ target_link_libraries(cuda_library_comparision PRIVATE
     CUDA::nppig 
     CUDA::nppicc
     CUDA::nppisu
-    )
-target_link_libraries(cuda_library_comparision PRIVATE ${OpenCV_LIBS})
-target_link_libraries(cuda_library_comparision PRIVATE loguru)
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE CUDA::cudart  ${CUDA_NPP_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE loguru)
 
-
+# ============================
+# Additional settings
+# ============================
 # Post-build step to copy the OpenCV DLLs to the executable directory
+set(OPENCV_DLL_NAME "opencv_world4110")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(OPENCV_DLL_PATH "${OpenCV_DIR}/bin/Debug/opencv_world4110d.dll")
+    set(OPENCV_DLL_NAME "${OPENCV_DLL_NAME}d.dll")
 else()
-    set(OPENCV_DLL_PATH "${OpenCV_DIR}/bin/Release/opencv_world4110.dll")
+    set(OPENCV_DLL_NAME "${OPENCV_DLL_NAME}.dll")
 endif()
 
-add_custom_command(TARGET cuda_library_comparision POST_BUILD
+set(OPENCV_DLL_PATH "${OpenCV_DIR}/bin/${CMAKE_BUILD_TYPE}/${OPENCV_DLL_NAME}")
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${OPENCV_DLL_PATH}" $<TARGET_FILE_DIR:cuda_library_comparision>
+    "${OPENCV_DLL_PATH}" $<TARGET_FILE_DIR:${PROJECT_NAME}>
     COMMENT "Copying OpenCV DLLs to executable directory"
 )
 
 # Copy compile_commands.json to the source directory (project root)
+# This is useful for tools like clang-tidy or IDEs that need it
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
     execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_BINARY_DIR}/compile_commands.json
