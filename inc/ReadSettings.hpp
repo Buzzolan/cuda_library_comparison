@@ -3,22 +3,30 @@
 #include <filesystem>
 #include <fstream>
 #include <json.hpp>
+#include <opencv2/opencv.hpp>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+
+namespace settings {
+void PrintGPUInfo();
+std::tuple<cv::Mat, uint8_t, double> InitSettings(
+    const std::filesystem::path& filename);
 
 class ReadSettings {
    public:
     explicit ReadSettings(const std::filesystem::path& filename) {
         std::ifstream file(filename);
         if (!file.is_open()) {
-            throw std::runtime_error("Could not open settings file: " + filename.string());
+            throw std::runtime_error("Could not open settings file: " +
+                                     filename.string());
         }
         try {
             file >> settings_json_;  // Parse JSON content
         } catch (const nlohmann::json::parse_error& e) {
-            throw std::runtime_error("JSON parse error in file " + filename.string() + ": " +
-                                     e.what());
+            throw std::runtime_error("JSON parse error in file " +
+                                     filename.string() + ": " + e.what());
         }
     }
 
@@ -54,3 +62,4 @@ class ReadSettings {
    private:
     nlohmann::json settings_json_;
 };
+}  // namespace settings

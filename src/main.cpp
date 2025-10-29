@@ -1,62 +1,43 @@
 #include <cuda_runtime.h>
 #include <npp.h>
 
-#include <iostream>
 #include <opencv2/opencv.hpp>
-#include <string>
 
-#undef LOGURU_WITH_STREAMS
 #include "ReadSettings.hpp"
 #include "laplacian_methods.hpp"
 #include "loguru.hpp"
 #include "utils.hpp"
 
 int main(int argc, char* argv[]) {
-    ReadSettings settings("Settings.json");
-    std::string image_path =
-        settings.GetValue<std::string>("Settings.image_path", "data/grey-sloth.png");
-    int kernel_size = settings.GetValue<int>("Settings.kernel_size", 3);
-    double contrast_factor = settings.GetValue<double>("Settings.constrast_factor", 1.0);
-
     // set loguru for debugging
     loguru::init(argc, argv);
     loguru::add_file("log.txt", loguru::Append, loguru::Verbosity_INFO);
 
-    cv::Mat result_cpu_opencv;
-    cv::Mat result_gpu_opencv;
-    cv::Mat result_gpu_opencv_pinned;
+    // read settings
+    auto [image, kernel_size, contrast_factor] =
+        settings::InitSettings("settings.json");
 
-    cv::Mat image = cv::imread(image_path, cv::IMREAD_GRAYSCALE);
-    if (image.empty()) {
-        std::cerr << "Error: Could not open image at " << image_path << "\n";
-        return 1;
-    }
-    LOG_F(INFO, "Image size: %d x %d", image.cols, image.rows);
+    // -----------------------------------------------------------------------------------
+    // CPU Implementation
+    // -----------------------------------------------------------------------------------
 
-    result_cpu_opencv = OpencvCpuLaplacian(image, kernel_size, contrast_factor);
+    // OpenCV CPU Laplacian
+    cv::Mat result_cpu_opencv =
+        OpencvCpuLaplacian(image, kernel_size, contrast_factor);
     cv::imwrite("output_laplacian_opencv_cpu.png", result_cpu_opencv);
 
-    // print GPU information
-    cudaDeviceProp deviceProp;
-    cudaError_t err = cudaGetDeviceProperties(&deviceProp, 0);
-    if (err != cudaSuccess) {
-        std::cerr << "Failed to get device properties: " << cudaGetErrorString(err) << std::endl;
-        return -1;
-    }
+    // -----------------------------------------------------------------------------------
+    // GPU Implementations
+    // -----------------------------------------------------------------------------------
 
-    LOG_F(INFO, "GPU name: %s", deviceProp.name);
-    LOG_F(INFO, "Total global memory: %zu bytes", deviceProp.totalGlobalMem);
-    LOG_F(INFO, "Shared memory per block: %zu bytes", deviceProp.sharedMemPerBlock);
-    LOG_F(INFO, "Max threads per block: %d", deviceProp.maxThreadsPerBlock);
+    // OpenCV GPU Laplacian
+    cv::Mat result_gpu_opencv =
+        OpencvGpuLaplacian(image, kernel_size, contrast_factor);
 
-    try {
-        result_gpu_opencv = OpencvGpuLaplacian(image, kernel_size, contrast_factor);
-        result_gpu_opencv_pinned =
-            OpencvGpuLaplacian_PinnedMem(image, kernel_size, contrast_factor);
-        cv::imwrite("output_laplacian_opencv_gpu.png", result_gpu_opencv);
-    } catch (const std::exception& ex) {
-        std::cerr << "Errore: " << ex.what() << "\n";
-    }
+    // OpenCV GPU Laplacian with Pinned Memory
+    cv::Mat result_gpu_opencv_pinned =
+        OpencvGpuLaplacian_PinnedMem(image, kernel_size, contrast_factor);
+    cv::imwrite("output_laplacian_opencv_gpu.png", result_gpu_opencv);
 
     // Compute and print MSE and SSIM
     double mse = getMSE(result_cpu_opencv, result_gpu_opencv);

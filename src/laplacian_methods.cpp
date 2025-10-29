@@ -1,3 +1,5 @@
+#include "laplacian_methods.hpp"
+
 #include <cuda_runtime.h>
 #include <npp.h>
 
@@ -6,25 +8,35 @@
 #include <opencv2/cudafilters.hpp>
 #include <opencv2/cudaimgproc.hpp>
 
-#undef LOGURU_WITH_STREAMS
-#include "laplacian_methods.hpp"
 #include "loguru.hpp"
 #include "utils.hpp"
 
-cv::Mat OpencvCpuLaplacian(const cv::Mat& input_image, int kernel_size, double contrast_factor) {
+
+/**
+ * @brief Apply Laplacian filter using OpenCV on CPU
+ *
+ * @param input_image Input grayscale image
+ * @param kernel_size Size of the Laplacian kernel (must be odd and positive)
+ * @param contrast_factor Scaling factor for the Laplacian result
+ */
+cv::Mat OpencvCpuLaplacian(const cv::Mat& input_image, int kernel_size,
+                           double contrast_factor) {
     cv::Mat laplacian_output;
     Stopwatch stopwatch;
 
-    cv::Laplacian(input_image, laplacian_output, CV_8U, kernel_size, contrast_factor);
+    cv::Laplacian(input_image, laplacian_output, CV_8U, kernel_size,
+                  contrast_factor);
     LOG_F(INFO, "Laplacian opencv CPU Time: %.2f ms", stopwatch.Elapsed_ms());
 
     return laplacian_output;
 }
 
-cv::Mat OpencvGpuLaplacian(const cv::Mat& input_cpu_img, int kernel_size, double scale) {
+cv::Mat OpencvGpuLaplacian(const cv::Mat& input_cpu_img, int kernel_size,
+                           double scale) {
     // Controlla se CUDA è disponibile
     if (cv::cuda::getCudaEnabledDeviceCount() == 0) {
-        throw std::runtime_error("CUDA non disponibile o OpenCV non compilato con supporto CUDA.");
+        throw std::runtime_error(
+            "CUDA non disponibile o OpenCV non compilato con supporto CUDA.");
     }
     Stopwatch stopwatch;
     cv::TickMeter total_timer;
@@ -33,18 +45,20 @@ cv::Mat OpencvGpuLaplacian(const cv::Mat& input_cpu_img, int kernel_size, double
     cv::cuda::GpuMat d_input, d_output;
     d_input.upload(input_cpu_img);
 
-    LOG_F(INFO, "Laplacian opencv GPU Upload Time: %.2f ms", stopwatch.Elapsed_ms());
+    LOG_F(INFO, "Laplacian opencv GPU Upload Time: %.2f ms",
+          stopwatch.Elapsed_ms());
     stopwatch.Restart();
 
     // Crea filtro Laplaciano
-    auto laplacian_filter =
-        cv::cuda::createLaplacianFilter(d_input.type(),   // tipo input
-                                        d_output.type(),  // tipo output
-                                        kernel_size,      // dimensione kernel
-                                        scale             // fattore di scala (contrast factor)
-        );
+    auto laplacian_filter = cv::cuda::createLaplacianFilter(
+        d_input.type(),   // tipo input
+        d_output.type(),  // tipo output
+        kernel_size,      // dimensione kernel
+        scale             // fattore di scala (contrast factor)
+    );
 
-    LOG_F(INFO, "Laplacian opencv GPU Filter Creation Time: %.2f ms", stopwatch.Elapsed_ms());
+    LOG_F(INFO, "Laplacian opencv GPU Filter Creation Time: %.2f ms",
+          stopwatch.Elapsed_ms());
     stopwatch.Restart();
 
     // Applica filtro
@@ -57,9 +71,11 @@ cv::Mat OpencvGpuLaplacian(const cv::Mat& input_cpu_img, int kernel_size, double
     cv::Mat result;
     d_output.download(result);
 
-    LOG_F(INFO, "Laplacian opencv GPU Download Time: %.2f ms", stopwatch.Elapsed_ms());
+    LOG_F(INFO, "Laplacian opencv GPU Download Time: %.2f ms",
+          stopwatch.Elapsed_ms());
     total_timer.stop();
-    LOG_F(INFO, "Total Laplacian opencv GPU Time: %.2f ms", total_timer.getTimeMilli());
+    LOG_F(INFO, "Total Laplacian opencv GPU Time: %.2f ms",
+          total_timer.getTimeMilli());
 
     return result;
 }
@@ -71,8 +87,9 @@ void checkNppStatus(NppStatus status, const char* msg) {
     }
 }
 
-void ApplyLaplacianWithGaussian(const Npp8u* d_input, Npp8u* d_output, int width, int height,
-                                int step  // normalmente uguale a width, se non ci sono padding
+void ApplyLaplacianWithGaussian(
+    const Npp8u* d_input, Npp8u* d_output, int width, int height,
+    int step  // normalmente uguale a width, se non ci sono padding
 ) {
     Stopwatch stopwatch;
     NppiSize roi = {width, height};
@@ -82,23 +99,26 @@ void ApplyLaplacianWithGaussian(const Npp8u* d_input, Npp8u* d_output, int width
     cudaMalloc(&d_smooth, step * height);
 
     // Step 1: Gaussian smoothing
-    checkNppStatus(nppiFilterGauss_8u_C1R(d_input, step, d_smooth, step, roi, NPP_MASK_SIZE_3_X_3),
+    checkNppStatus(nppiFilterGauss_8u_C1R(d_input, step, d_smooth, step, roi,
+                                          NPP_MASK_SIZE_3_X_3),
                    "Gaussian Filter");
     LOG_F(INFO, "Gaussian smoothing Time: %.2f ms", stopwatch.Elapsed_ms());
 
     // Step 2: Laplacian filtering
-    checkNppStatus(
-        nppiFilterLaplace_8u_C1R(d_smooth, step, d_output, step, roi, NPP_MASK_SIZE_3_X_3),
-        "Laplacian Filter");
+    checkNppStatus(nppiFilterLaplace_8u_C1R(d_smooth, step, d_output, step, roi,
+                                            NPP_MASK_SIZE_3_X_3),
+                   "Laplacian Filter");
 
     // Cleanup
     cudaFree(d_smooth);
     LOG_F(INFO, "Laplacian with Gaussian Time: %.2f ms", stopwatch.Elapsed_ms());
 }
 
-cv::Mat OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img, int kernel_size, double scale) {
+cv::Mat OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img,
+                                     int kernel_size, double scale) {
     if (cv::cuda::getCudaEnabledDeviceCount() == 0) {
-        throw std::runtime_error("CUDA not available or OpenCV built without CUDA support.");
+        throw std::runtime_error(
+            "CUDA not available or OpenCV built without CUDA support.");
     }
 
     cv::TickMeter total_timer;
@@ -117,7 +137,8 @@ cv::Mat OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img, int kernel_si
     cv::cuda::GpuMat d_input(pinned_input);
 
     upload_timer.stop();
-    LOG_F(INFO, "Upload using pinned memory: %.2f ms", upload_timer.getTimeMilli());
+    LOG_F(INFO, "Upload using pinned memory: %.2f ms",
+          upload_timer.getTimeMilli());
 
     // -------------------------
     // 🔹 Step 2: Create Laplacian filter
@@ -127,11 +148,12 @@ cv::Mat OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img, int kernel_si
 
     // Use d_input.type() for input and output type
     cv::cuda::GpuMat d_output;
-    auto laplacian_filter =
-        cv::cuda::createLaplacianFilter(d_input.type(), d_input.type(), kernel_size, scale);
+    auto laplacian_filter = cv::cuda::createLaplacianFilter(
+        d_input.type(), d_input.type(), kernel_size, scale);
 
     filter_create_timer.stop();
-    LOG_F(INFO, "Filter creation time: %.2f ms", filter_create_timer.getTimeMilli());
+    LOG_F(INFO, "Filter creation time: %.2f ms",
+          filter_create_timer.getTimeMilli());
 
     // -------------------------
     // 🔹 Step 3: Apply filter

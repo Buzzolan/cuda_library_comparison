@@ -20,7 +20,9 @@ include_directories(
 add_executable(${PROJECT_NAME} 
     src/main.cpp
     src/laplacian_methods.cpp
-    src/utils.cpp)
+    src/utils.cpp
+    src/ReadSettings.cpp
+)
 
 # ============================
 # Find CUDA Toolkit
