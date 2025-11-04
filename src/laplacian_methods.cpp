@@ -11,26 +11,6 @@
 #include "loguru.hpp"
 #include "utils.hpp"
 
-
-/**
- * @brief Apply Laplacian filter using OpenCV on CPU
- *
- * @param input_image Input grayscale image
- * @param kernel_size Size of the Laplacian kernel (must be odd and positive)
- * @param contrast_factor Scaling factor for the Laplacian result
- */
-cv::Mat OpencvCpuLaplacian(const cv::Mat& input_image, int kernel_size,
-                           double contrast_factor) {
-    cv::Mat laplacian_output;
-    Stopwatch stopwatch;
-
-    cv::Laplacian(input_image, laplacian_output, CV_8U, kernel_size,
-                  contrast_factor);
-    LOG_F(INFO, "Laplacian opencv CPU Time: %.2f ms", stopwatch.Elapsed_ms());
-
-    return laplacian_output;
-}
-
 cv::Mat OpencvGpuLaplacian(const cv::Mat& input_cpu_img, int kernel_size,
                            double scale) {
     // Controlla se CUDA è disponibile

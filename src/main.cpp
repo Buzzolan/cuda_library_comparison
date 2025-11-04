@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "ReadSettings.hpp"
+#include "gpu_edge_detection.hpp"
 #include "laplacian_methods.hpp"
 #include "loguru.hpp"
 #include "utils.hpp"
@@ -22,8 +23,9 @@ int main(int argc, char* argv[]) {
     // -----------------------------------------------------------------------------------
 
     // OpenCV CPU Laplacian
-    cv::Mat result_cpu_opencv =
-        OpencvCpuLaplacian(image, kernel_size, contrast_factor);
+    cv::Mat result_cpu_opencv;
+    gpu_edge_detection::OpencvLaplacian(image, result_cpu_opencv, kernel_size,
+                                        contrast_factor);
     cv::imwrite("output_laplacian_opencv_cpu.png", result_cpu_opencv);
 
     // -----------------------------------------------------------------------------------
