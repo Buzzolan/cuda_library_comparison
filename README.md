@@ -117,6 +117,14 @@ These metrics are used to compare GPU and CPU Laplacian results.
 └── third_party/
     └── loguru/
 ```
+---
+| Category                    | Example Functions                    | Purpose                          |
+| --------------------------- | ------------------------------------ | -------------------------------- |
+| **Filtering / Convolution** | `filter2D`, `Laplacian`, `Sobel`     | Modify pixels based on neighbors |
+| **Blurring / Smoothing**    | `blur`, `GaussianBlur`, `medianBlur` | Reduce noise / detail            |
+| **Edge Detection**          | `Laplacian`, `Canny`, `Sobel`        | Highlight edges                  |
+| **Morphological Ops**       | `erode`, `dilate`, `morphologyEx`    | Refine binary images             |
+| **Frequency-Domain Ops**    | `fft2`, `ifft2`                      | Filtering via Fourier transform  |
 
 ---
 
