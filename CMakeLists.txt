@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
     src/laplacian_methods.cpp
     src/utils.cpp
     src/ReadSettings.cpp
+    src/cpu_edge_detection.cpp
     src/gpu_edge_detection.cpp
 )
 

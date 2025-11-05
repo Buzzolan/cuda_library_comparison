@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "ReadSettings.hpp"
+#include "cpu_edge_detection.hpp"
 #include "gpu_edge_detection.hpp"
 #include "laplacian_methods.hpp"
 #include "loguru.hpp"
@@ -24,7 +25,7 @@ int main(int argc, char* argv[]) {
 
     // OpenCV CPU Laplacian
     cv::Mat result_cpu_opencv;
-    gpu_edge_detection::OpencvLaplacian(image, result_cpu_opencv, kernel_size,
+    cpu_edge_detection::OpencvLaplacian(image, result_cpu_opencv, kernel_size,
                                         contrast_factor);
     cv::imwrite("output_laplacian_opencv_cpu.png", result_cpu_opencv);
 
@@ -33,12 +34,19 @@ int main(int argc, char* argv[]) {
     // -----------------------------------------------------------------------------------
 
     // OpenCV GPU Laplacian
-    cv::Mat result_gpu_opencv =
-        OpencvGpuLaplacian(image, kernel_size, contrast_factor);
+    cv::Mat result_gpu_opencv;
+    gpu_edge_detection::OpencvGpuLaplacian(image, result_gpu_opencv, kernel_size,
+                                           contrast_factor);
 
     // OpenCV GPU Laplacian with Pinned Memory
-    cv::Mat result_gpu_opencv_pinned =
-        OpencvGpuLaplacian_PinnedMem(image, kernel_size, contrast_factor);
+    // cv::Mat result_gpu_opencv_pinned;
+    // OpencvGpuLaplacian_PinnedMem(image, result_gpu_opencv_pinned, kernel_size,
+    //                              contrast_factor);
+
+    // -----------------------------------------------------------------------------------
+    // Results Saving and Comparison
+    // -----------------------------------------------------------------------------------
+
     cv::imwrite("output_laplacian_opencv_gpu.png", result_gpu_opencv);
 
     // Compute and print MSE and SSIM

@@ -11,55 +11,6 @@
 #include "loguru.hpp"
 #include "utils.hpp"
 
-cv::Mat OpencvGpuLaplacian(const cv::Mat& input_cpu_img, int kernel_size,
-                           double scale) {
-    // Controlla se CUDA è disponibile
-    if (cv::cuda::getCudaEnabledDeviceCount() == 0) {
-        throw std::runtime_error(
-            "CUDA non disponibile o OpenCV non compilato con supporto CUDA.");
-    }
-    Stopwatch stopwatch;
-    cv::TickMeter total_timer;
-    total_timer.start();
-    // Upload su GPU
-    cv::cuda::GpuMat d_input, d_output;
-    d_input.upload(input_cpu_img);
-
-    LOG_F(INFO, "Laplacian opencv GPU Upload Time: %.2f ms",
-          stopwatch.Elapsed_ms());
-    stopwatch.Restart();
-
-    // Crea filtro Laplaciano
-    auto laplacian_filter = cv::cuda::createLaplacianFilter(
-        d_input.type(),   // tipo input
-        d_output.type(),  // tipo output
-        kernel_size,      // dimensione kernel
-        scale             // fattore di scala (contrast factor)
-    );
-
-    LOG_F(INFO, "Laplacian opencv GPU Filter Creation Time: %.2f ms",
-          stopwatch.Elapsed_ms());
-    stopwatch.Restart();
-
-    // Applica filtro
-    laplacian_filter->apply(d_input, d_output);
-
-    LOG_F(INFO, "Laplacian opencv GPU Time: %.2f ms", stopwatch.Elapsed_ms());
-    stopwatch.Restart();
-    // Scarica risultato su CPU
-
-    cv::Mat result;
-    d_output.download(result);
-
-    LOG_F(INFO, "Laplacian opencv GPU Download Time: %.2f ms",
-          stopwatch.Elapsed_ms());
-    total_timer.stop();
-    LOG_F(INFO, "Total Laplacian opencv GPU Time: %.2f ms",
-          total_timer.getTimeMilli());
-
-    return result;
-}
-
 void checkNppStatus(NppStatus status, const char* msg) {
     if (status != NPP_SUCCESS) {
         std::cerr << "NPP Error at " << msg << ": " << status << std::endl;
