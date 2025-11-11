@@ -4,6 +4,7 @@
 
 double computeSSIM(const cv::Mat& img1, const cv::Mat& img2);
 double getMSE(const cv::Mat& img1, const cv::Mat& img2);
+void CheckGpuSupportOrThrow();
 
 class Stopwatch {
    public:

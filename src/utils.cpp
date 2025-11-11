@@ -1,5 +1,11 @@
 #include <opencv2/opencv.hpp>
 
+void CheckGpuSupportOrThrow() {
+    if (cv::cuda::getCudaEnabledDeviceCount() == 0) {
+        throw std::runtime_error(
+            "CUDA not available or OpenCV built without CUDA support.");
+    }
+}
 double getMSE(const cv::Mat& img1, const cv::Mat& img2) {
     cv::Mat diff;
     cv::absdiff(img1, img2, diff);
@@ -10,7 +16,8 @@ double getMSE(const cv::Mat& img1, const cv::Mat& img2) {
 
 double computeSSIM(const cv::Mat& img1, const cv::Mat& img2) {
     // Constants C1, C2 are usually derived from the dynamic range
-    // of the pixel values (e.g., for 8-bit images: C1 = (0.01 * 255)^2, C2 = (0.03 * 255)^2).
+    // of the pixel values (e.g., for 8-bit images: C1 = (0.01 * 255)^2, C2 =
+    // (0.03 * 255)^2).
     const double C1 = 6.5025, C2 = 58.5225;
 
     cv::Mat I1, I2;
