@@ -39,9 +39,9 @@ int main(int argc, char* argv[]) {
                                            contrast_factor);
 
     // OpenCV GPU Laplacian with Pinned Memory
-    // cv::Mat result_gpu_opencv_pinned;
-    // OpencvGpuLaplacian_PinnedMem(image, result_gpu_opencv_pinned, kernel_size,
-    //                              contrast_factor);
+    cv::Mat result_gpu_opencv_pinned;
+    gpu_edge_detection::OpencvGpuLaplacian_PinnedMem(
+        image, result_gpu_opencv_pinned, kernel_size, contrast_factor);
 
     // -----------------------------------------------------------------------------------
     // Results Saving and Comparison

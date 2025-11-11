@@ -35,25 +35,11 @@ namespace gpu_edge_detection {
  *
  * @throws std::runtime_error If CUDA is not available or OpenCV was not compiled
  *                            with CUDA support.
- *
- * @note
- * - Tested with **OpenCV 4.11.0** compiled with **CUDA support**.
- * - Only kernel sizes of **1 and 3** are supported.
- * - Logs detailed timing information using `LOG_F` and a custom `Stopwatch`
- * utility.
- * - Upload and download operations between CPU and GPU are included in the timing
- * logs.
  */
 void OpencvGpuLaplacian(const cv::Mat& input_cpu_img, cv::Mat& out_cpu_img,
                         int kernel_size, double scale) {
-    // Controlla se CUDA è disponibile
-    if (cv::cuda::getCudaEnabledDeviceCount() == 0) {
-        throw std::runtime_error(
-            "CUDA non disponibile o OpenCV non compilato con supporto CUDA.");
-    }
-    Stopwatch stopwatch;
-    cv::TickMeter total_timer;
-    total_timer.start();
+    CheckGpuSupportOrThrow();
+    Stopwatch stopwatch, total_stopwatch;
     // Upload su GPU
     cv::cuda::GpuMat d_input, d_output;
     d_input.upload(input_cpu_img);
@@ -85,9 +71,71 @@ void OpencvGpuLaplacian(const cv::Mat& input_cpu_img, cv::Mat& out_cpu_img,
     d_output.download(out_cpu_img);
     LOG_F(INFO, "Laplacian opencv GPU Download Time: %.2f ms",
           stopwatch.Elapsed_ms());
+    LOG_F(INFO, "Laplacian opencv GPU Total Time: %.2f ms",
+          total_stopwatch.Elapsed_ms());
+}
 
-    total_timer.stop();
-    LOG_F(INFO, "Total Laplacian opencv GPU Time: %.2f ms",
-          total_timer.getTimeMilli());
+/**
+ * @brief Applies a Laplacian filter on an image using OpenCV 4.11.0 with CUDA
+ * acceleration and pinned (page-locked) host memory for optimized data transfer.
+ *
+ * This function performs Laplacian edge detection using OpenCV’s CUDA module,
+ * similar to `OpencvGpuLaplacian`, but leverages **pinned (page-locked) memory**
+ * for faster CPU–GPU data transfers. The input image is first wrapped in
+ * `cv::cuda::HostMem` with the `PAGE_LOCKED` flag, which allows more efficient
+ * DMA transfers between CPU and GPU memory.
+ *
+ * The function supports **only kernel sizes 1 and 3**, as limited by OpenCV
+ * 4.11.0’s CUDA Laplacian implementation. Execution times for each major step
+ * (upload, filter creation, filtering, and download) are logged for performance
+ * benchmarking.
+ *
+ * @param input_cpu_img Input image stored in CPU memory (`cv::Mat`).
+ *                      The image will be internally copied into pinned memory
+ *                      before being uploaded to the GPU.
+ * @param out_cpu_img Output image stored in CPU memory (`cv::Mat`).
+ *                    The filtered result will be downloaded here after GPU
+ *                    processing.
+ * @param kernel_size Size of the Laplacian kernel. Must be either **1 or 3**.
+ *                    Other values are not supported by OpenCV’s CUDA backend.
+ * @param scale Scaling factor applied to the computed Laplacian result.
+ *              Controls the intensity or contrast of the output edges.
+ *
+ * @throws std::runtime_error If CUDA is not available or OpenCV was not compiled
+ *                            with CUDA support.
+ */
+void OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img,
+                                  cv::Mat& out_cpu_img, int kernel_size,
+                                  double scale) {
+    CheckGpuSupportOrThrow();
+    Stopwatch total_stopwatch, stopwatch;
+    // Convert input to pinned memory (page-locked)
+    cv::cuda::HostMem pinned_input(input_cpu_img, cv::cuda::HostMem::PAGE_LOCKED);
+
+    // Upload to GPU from pinned memory (faster than normal memory)
+    cv::cuda::GpuMat d_input(pinned_input);
+
+    LOG_F(INFO, "Upload time (pinned memory): %.2f ms", stopwatch.Elapsed_ms());
+    stopwatch.Restart();
+
+    // Use d_input.type() for input and output type
+    cv::cuda::GpuMat d_output;
+    auto laplacian_filter = cv::cuda::createLaplacianFilter(
+        d_input.type(), d_input.type(), kernel_size, scale);
+
+    LOG_F(INFO, "Filter creation time: %.2f ms", stopwatch.Elapsed_ms());
+    stopwatch.Restart();
+
+    laplacian_filter->apply(d_input, d_output);
+
+    LOG_F(INFO, "Laplacian filtering time: %.2f ms", stopwatch.Elapsed_ms());
+    stopwatch.Restart();
+
+    d_output.download(
+        out_cpu_img);  // You could also download into another HostMem
+
+    LOG_F(INFO, "Download time: %.2f ms", stopwatch.Elapsed_ms());
+    LOG_F(INFO, "Total time (pinned memory): %.2f ms",
+          total_stopwatch.Elapsed_ms());
 }
 }  // namespace gpu_edge_detection
