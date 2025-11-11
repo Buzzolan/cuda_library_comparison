@@ -38,6 +38,7 @@ namespace gpu_edge_detection {
  */
 void OpencvGpuLaplacian(const cv::Mat& input_cpu_img, cv::Mat& out_cpu_img,
                         int kernel_size, double scale) {
+    LOG_F(INFO, "------------------OpencvGpuLaplacian----------------------");
     CheckGpuSupportOrThrow();
     Stopwatch stopwatch, total_stopwatch;
     // Upload su GPU
@@ -107,6 +108,7 @@ void OpencvGpuLaplacian(const cv::Mat& input_cpu_img, cv::Mat& out_cpu_img,
 void OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img,
                                   cv::Mat& out_cpu_img, int kernel_size,
                                   double scale) {
+    LOG_F(INFO, "---------------OpencvGpuLaplacian_PinnedMem-------------------");
     CheckGpuSupportOrThrow();
     Stopwatch total_stopwatch, stopwatch;
     // Convert input to pinned memory (page-locked)
