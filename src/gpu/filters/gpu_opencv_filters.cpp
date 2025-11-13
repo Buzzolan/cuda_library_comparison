@@ -1,4 +1,4 @@
-#include "gpu_edge_detection.hpp"
+#include "filters/gpu_opencv_filters.hpp"
 
 #include <cuda_runtime.h>
 
@@ -7,7 +7,7 @@
 #include "loguru.hpp"
 #include "utils.hpp"
 
-namespace gpu_edge_detection {
+namespace gpu::filters::opencv {
 /**
  * @brief Applies a Laplacian filter on an image using OpenCV 4.11.0 with CUDA
  * acceleration.
@@ -36,8 +36,8 @@ namespace gpu_edge_detection {
  * @throws std::runtime_error If CUDA is not available or OpenCV was not compiled
  *                            with CUDA support.
  */
-void OpencvGpuLaplacian(const cv::Mat& input_cpu_img, cv::Mat& out_cpu_img,
-                        int kernel_size, double scale) {
+void ApplyLaplacian(const cv::Mat& input_cpu_img, cv::Mat& out_cpu_img,
+                    int kernel_size, double scale) {
     LOG_F(INFO, "------------------OpencvGpuLaplacian----------------------");
     CheckGpuSupportOrThrow();
     Stopwatch stopwatch, total_stopwatch;
@@ -105,9 +105,9 @@ void OpencvGpuLaplacian(const cv::Mat& input_cpu_img, cv::Mat& out_cpu_img,
  * @throws std::runtime_error If CUDA is not available or OpenCV was not compiled
  *                            with CUDA support.
  */
-void OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img,
-                                  cv::Mat& out_cpu_img, int kernel_size,
-                                  double scale) {
+void ApplyLaplacianWithPinnedMem(const cv::Mat& input_cpu_img,
+                                 cv::Mat& out_cpu_img, int kernel_size,
+                                 double scale) {
     LOG_F(INFO, "---------------OpencvGpuLaplacian_PinnedMem-------------------");
     CheckGpuSupportOrThrow();
     Stopwatch total_stopwatch, stopwatch;
@@ -140,4 +140,4 @@ void OpencvGpuLaplacian_PinnedMem(const cv::Mat& input_cpu_img,
     LOG_F(INFO, "Total time (pinned memory): %.2f ms",
           total_stopwatch.Elapsed_ms());
 }
-}  // namespace gpu_edge_detection
+}  // namespace gpu::filters::opencv

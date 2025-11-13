@@ -19,11 +19,11 @@ include_directories(
 
 add_executable(${PROJECT_NAME} 
     src/main.cpp
-    src/laplacian_methods.cpp
     src/utils.cpp
     src/ReadSettings.cpp
-    src/cpu_edge_detection.cpp
-    src/gpu_edge_detection.cpp
+    src/cpu/filters/cpu_opencv_filters.cpp
+    src/gpu/filters/gpu_opencv_filters.cpp
+    src/gpu/filters/gpu_npp_filters.cpp
 )
 
 # ============================

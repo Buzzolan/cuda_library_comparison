@@ -1,9 +1,9 @@
-#include "cpu_edge_detection.hpp"
+#include "filters/cpu_opencv_filters.hpp"
 
 #include "loguru.hpp"
 #include "utils.hpp"
 
-namespace cpu_edge_detection {
+namespace cpu::filters::opencv {
 /**
  * @brief Apply a Laplacian filter to the input image using OpenCV (CPU
  * implementation).
@@ -16,8 +16,8 @@ namespace cpu_edge_detection {
  * @param kernel_size Size of the Laplacian kernel (must be odd and positive).
  * @param contrast_factor Scaling factor applied to the Laplacian result.
  */
-void OpencvLaplacian(const cv::Mat& input_image, cv::Mat& laplacian_output,
-                     int kernel_size, double contrast_factor) {
+void ApplyLaplacian(const cv::Mat& input_image, cv::Mat& laplacian_output,
+                    int kernel_size, double contrast_factor) {
     Stopwatch stopwatch;
 
     cv::Laplacian(input_image, laplacian_output, CV_8U, kernel_size,
@@ -25,4 +25,4 @@ void OpencvLaplacian(const cv::Mat& input_image, cv::Mat& laplacian_output,
 
     LOG_F(INFO, "Laplacian opencv CPU Time: %.2f ms", stopwatch.Elapsed_ms());
 }
-}  // namespace cpu_edge_detection
+}  // namespace cpu::filters::opencv
