@@ -46,9 +46,9 @@ int main(int argc, char* argv[]) {
     cv::imwrite("output_laplacian_opencv_gpu_pinned.png",
                 result_gpu_opencv_pinned);
 
-    // Npp GPU Laplacian with Gaussian Smoothing
+    // NPP GPU Laplacian
     cv::Mat img_out(image.rows, image.cols, CV_8UC1);
-    gpu::filters::npp::ApplyLaplacianWithGaussian(image, img_out);
+    gpu::filters::npp::Laplacian_NPP_Host(image, img_out);
     cv::imwrite("output_laplacian_npp.png", img_out);
 
     // -----------------------------------------------------------------------------------
